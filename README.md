@@ -157,6 +157,48 @@ public E set(int index, E element) {
 //set方法同样使用的是node方法，不再详述了
 ```
 
+### Map
+
+#### HashMap
+
+大家写Map可能绝大部分情况下都是使用HashMap。HashMap底层是通过数组加链表（Java1.8新加了红黑树）来实现。为什么要搞这么复杂呢？又是数组又是链表又是树的？其实还是为了提高效率。上面的把键值对封装成Data，加到List中。get效率跟HashMap比就会非常惨了。因为get只能一个个去遍历，但是HashMap就可以通过key的hashcode非常高效的get数据。
+
+
+
+#### LinkedHashMap
+
+看名字就知道多了个Linked，意思就是排序。LinkedHashMap本身就是继承自HashMap，所以增删改查方面和HashMap基本是一致的。区别主要就是通过entrySet遍历了。LinkedHashMap会保存元素的添加顺序然后按顺序遍历，但HashMap就是无序了。
+
+
+
+#### TreeMap
+
+TreeMap内部是个红黑树。从使用角度来看，它跟LinkedHashMap主要区别就LinkedHashMap保存的是元素的插入顺序，而TreeMap则是对key排序。遍历可以得到一个按key排序的结果。
+
+
+
+#### HashTable
+
+内部是个链表，另外就是线程同步。
+
+
+
+#### ArrayMap
+
+ArrayMap内部也是使用数组。查找数据会通过二分法来提高效率，Google推荐用ArrayMap来代替HashMap。
+
+
+
+#### SparseArray
+
+SparseArray内部依然是使用数组来实现。但是限制了key只能int，而且没有装箱，HashMap的key只能是Integer。所以Sparse性能会更好，它内部做了数据压缩，来稀疏数组的数据，节省内存。
+
+
+
+
+
+
+
 ### 总结
 
 主要讲的是对于数据结构的基本认识和链表的了解，可能对于我们实际开发并不会有很大的实质性帮助，但是这只是数据结构和算法知识的一小部分，我相信当我们对数据结构和算法有一个比较全面的了解和理解的时候，对于我们的实质编码肯定是会有帮助的，加油吧！
@@ -353,7 +395,9 @@ public E remove(int index) {
 4. Arrays中有大量操作数组的方法
 5. 文章上述的内容更多的是想让大家理解数组以及数组容器而不是源码，希望大家有所收获。
 
-ojbk
+# 线程
+
+
 
 
 
