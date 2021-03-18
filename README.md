@@ -626,7 +626,23 @@ public class OnlyMain{
 
 Thread是java语言对线程的抽象，Runnable是对任务的抽象。
 
-**!!!为什么不建议用stop停止线程，因为他会导致线程所占用的资源不会正常的释放**
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210318234950490.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2thcnNvbk5ldA==,size_16,color_FFFFFF,t_70)
+
+#### **yield()方法**
+
+让出CPU执行权，让出后，仍然还是会被选中。（不会让出锁，只是让出执行权）
+
+#### **join（）方法**
+
+类似于插队，面试题中会问到，怎么让线程顺序执行，可以利用join()方法，会让线程变成一个串型执行。
+
+
+
+**!!! 为什么不建议用stop停止线程，因为他会导致线程所占用的资源不会正常的释放**
+
+**!!! JDK线程是协作式的，不是抢占式**
+
+**!!! 处于死锁状态，是不会理会中断的**
 
 #### **句柄**
 
