@@ -157,6 +157,10 @@ public E set(int index, E element) {
 //set方法同样使用的是node方法，不再详述了
 ```
 
+### 哈希碰撞问题
+
+提到哈希表，必然提一下哈希碰撞问题，哈希碰撞两个不同的原始值在经过哈希运算后得到同样的结果，这样就是哈希碰撞。
+
 ### Map
 
 #### HashMap
@@ -599,6 +603,68 @@ false
 可以看到我还判断了出错的大概原因，利用栈结构就很好的完成了编码检查这个工作，像这种思想还可以运用到我们的实际开发中，希望大家都能有所体会。
 
 # 线程
+
+进程是资源分配的最小单位，运行一个进程需要，CPU，内存，磁盘IO；线程是CPU调度的最小单位；线程必须依赖于进程存在。（模块化，异步化，简单化），Linux是开启的线程不能超过1000个，每个开启一个线程都要分配一个栈空间。
+
+```java
+public class OnlyMain{
+    public static void main(String[] args){
+        //Java 虚拟机线程系统的管理接口
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        // 不需要获取同步的monitor 和 synchronizer信息，仅仅获取线程和线程堆信息
+        ThreadInfo[] threadInfos = threadMXBean.dumpAllThreads(false,false);
+        //遍历线程信息，仅打印线程ID和线程名称信息
+        for（ThreadInfo threadInfo: threadInfos）{
+            System.out.println("["+threadInfo.getThreadId()+"]"
+                               +threadInfo.getThreadName());
+        }
+    }
+}
+```
+
+新开启线程的方式位两种（官方JDK标注的）！
+
+Thread是java语言对线程的抽象，Runnable是对任务的抽象。
+
+**!!!为什么不建议用stop停止线程，因为他会导致线程所占用的资源不会正常的释放**
+
+#### **句柄**
+
+文件标识符
+
+### 线程基础、线程之间得共享和协作
+
+#### **CPU时间片轮转机制（RR调度）**
+
+#### **上下文切换**
+
+大概需要20000CPU周期
+
+#### **并行**
+
+实际上是一起执行
+
+#### **并发**
+
+实际上是交替的运行，在讨论并发的时候一定不能脱离时间单位，比如说单位时间内并发量是多少。（比如说咖啡机一分钟能4个人通过，那么就说这个并发量是一分钟4个）；
+
+#### **interrupt方法**
+
+推荐使用这个方法来停止线程
+
+### 线程得并发工具类
+
+### 原子锁操作CAS
+
+### 显示锁和AQS
+
+### 并发容器
+
+### 线程池和Exector框架
+
+### 线程安全
+
+### JVM和底层原理
 
 
 
