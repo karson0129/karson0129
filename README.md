@@ -390,10 +390,213 @@ public E remove(int index) {
 把ArrayList中的一系列方法都过了一遍之后，我们可以总结出如下内容：
 
 1. 查询数组中的元素效率非常高。
+
 2. 插入和删除数组中的元素需要复制数组中的元素，效率是很低的。
+
 3. ArrayList作为一个容器动态的帮我们维护了数组的大小和内容，我们只需要关心怎么使用即可。
+
 4. Arrays中有大量操作数组的方法
+
 5. 文章上述的内容更多的是想让大家理解数组以及数组容器而不是源码，希望大家有所收获。
+
+   
+
+## 队列
+
+队列稍有耳闻的同学肯定会知道它有一个特点：先进先出。正是这个特点使得队列在处理一些对于顺序要求很高的需求时有很好的效果，就像网络请求的排序，队列大概是这样的：
+
+![这里写图片描述](https://img-blog.csdn.net/20170807153011495?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDYxODE5NA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+上图可以看出队列是一个很明显的先进先出的结构，中间的元素是不允许修改的。
+
+java中使用Queue（队列）来描述队列，它里面有一系列方法：
+
+- offer方法,向队列尾部入列一个元素；
+- poll方法，把队列的第一个元素出列；
+- peek方法，查看队列的第一个元素，但是不出列；
+
+除了上面3个方法，其实还有3个方法：add，remove，element与上面3个方法对应，唯一的区别就是这3个方法会抛出异常，这不是我们关注的重点。
+
+java种关于Queue的实现结构如下：
+
+![image](https://img-blog.csdn.net/20170807152858037?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDYxODE5NA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+其中:
+
+**-priorityQueue虽然是Queue的实现类，但是它的实现与队列的“先进先出”特点是有些出入的，因为它会对每次进入队列的元素进行排序，也就是说当使用peek方法取出的元素可能不会是第一个进入队列的元素，而是整个队列最小的元素。**
+
+**-Deque是一个继承了Queue的接口，它在Queue的基础上增加了几个方法，使它成为了一个双端队列的结构，可以通过这些方法来操作队列两端的元素**
+
+**-ArrayDeque是Deque的一个典型实现**
+
+**-LinkedList，当时是把它当作做链表来讲解，其实它还实现了Deque，也就是说它还可以当做双端队列来使用。**
+
+既然java没有给我们提供一个规范的队列实现，我们就自己动手来写一个遵循”先进先出“规则的简单队列，毕竟我们学习数据结构更多的是理解这些数据结构的特点，而不是过多的关心它的实现。
+
+```java
+public class Queue<E> {
+    private Object[] data = null;// 队列
+    private int front;// 队列头，允许删除
+    private int rear;// 队列尾，允许插入
+
+    public Queue() {
+        this(10);// 默认队列的大小为10
+    }
+
+    public Queue(int initialSize) {
+        data = new Object[initialSize];
+        front = rear = 0;
+    }
+
+    // 入列一个元素
+    public void offer(E e) {
+        data[rear++] = e;
+    }
+
+    // 返回队首元素，但不删除
+    public E peek() {
+        return (E) data[front];
+    }
+
+    // 出队排在最前面的一个元素
+    public E poll() {
+        E value = (E) data[front];// 保留队列的front端的元素的值
+        data[front++] = null;// 释放队列的front端的元素
+        return value;
+    }
+}
+```
+
+来测试一下：
+
+```java
+Queue<String> queue = new Queue<>();
+queue.offer("1");
+queue.offer("2");
+queue.offer("3");
+queue.offer("4");
+System.out.println("当前第一个元素: " + queue.peek());// 取队列第一个元素
+System.out.println("出列第一个元素: " + queue.poll());// 出列第一个元素
+System.out.println("当前第一个元素: " + queue.peek());// 取队列第一个元素
+//结果如下：
+当前第一个元素: 1
+出列第一个元素: 1
+当前第一个元素: 2
+```
+
+代码很简单，没有做异常处理和各种边界处理，但是遵循了“先进先出的原理”。
+
+## 栈
+
+栈的特性是：先进后出。它的性质和队列有些相似，都可以通过他们的特性在某些场景发挥很好的作用：
+
+![这里写图片描述](https://img-blog.csdn.net/20170809110130160?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdTAxMDYxODE5NA==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+在java中使用Stack这个类来描述栈。
+
+```java
+public class Stack<E> extends Vector<E> {
+    ...
+}
+```
+
+可以看到Stack是继承自Vector同ArrayList一样，是一个比较古老的类，它是线程安全的。Stack中大部份方法都是直接调用Vector的，所以也是线程安全的。
+
+Stack中有几个常用的方法：
+
+```java
+public E push(E item)// 入栈一个元素
+public synchronized E pop()// 出栈一个元素
+public synchronized E peek()// 查看栈顶元素
+public boolean empty()// 判断是否为空
+public synchronized int search(Object o)// 到栈中查找一个元素
+```
+
+这几个方法都言简意赅，至于源码的流程，Vector中的方法实现与ArrayList基本相同。
+
+实现流程：
+
+1. 新建一个空栈
+2. 读入字符串，如遇到开放符号，则入栈，开放符号为:”{“、”(“、”[“，这种。
+3. 如果遇到关闭符号，就出栈当前栈顶元素，把出栈的元素与这个关闭符号进行匹配，像”{“对应的是”}”，如果匹配是正确的就说明符号是对应的，如果匹配是不正确的，就说明编码有问题。
+4. 如果传入的字符串是正确的，程序按照上述3步运行下来，栈应该还是空的。如果栈非空，说明编码有问题
+
+把上面4步转换成代码，可以得到以下程序：
+
+```java
+public static boolean test(String code) {
+    Stack<String> stack = new Stack<>();
+    char[] chars = code.toCharArray();// 把输入的字符串拆分成char一个一个读取
+    for (char aChar : chars) {
+        String s = String.valueOf(aChar);// char转String
+        if ("{".equals(s) || "[".equals(s) || "(".equals(s)) {
+            stack.push(String.valueOf(aChar));// 如果是开放符号就入栈
+        }
+        if (stack.isEmpty()) {
+            // 如果栈是空的，就说明有关闭符号缺少相应的开放符号
+            System.out.println("您的代码中有符号不对应");
+            return false;
+        }
+        // 如果是关闭符号，则出栈最上层的元素进行比较
+        // 如果是配对的符号，就说明是正确的；如果不是配对的符号，就说明是错误的
+        switch (s) {
+            case "}":
+                if (!"{".equals(stack.pop())) {
+                    System.out.println("您的代码中有符号不对应");
+                    return false;
+                }
+                break;
+            case "]":
+                if (!"[".equals(stack.pop())) {
+                    System.out.println("您的代码中有符号不对应");
+                    return false;
+                }
+                break;
+            case ")":
+                if (!"(".equals(stack.pop())) {
+                    System.out.println("您的代码中有符号不对应");
+                    return false;
+                }
+                break;
+        }
+    }
+    if (!stack.isEmpty()) {
+        System.out.println("您的代码中缺少闭合符号");
+        return false;
+    }
+    return true;
+}
+```
+
+代码的注释写的很详细，流程也很清晰，我们来测试一下几种情况：
+
+```java
+// 以下模拟了4种情况：
+System.out.println(test("{[]}"));// 正确
+System.out.println("————————————————————————————————");
+System.out.println(test("{[{}{}]"));// 缺少结尾"}"
+System.out.println("————————————————————————————————");
+System.out.println(test("{[{}{}]}}"));// 结尾多了一个"}"
+System.out.println("————————————————————————————————");
+System.out.println(test("{[{}{(}]}"));// 中间多了一个"("
+```
+
+输出结果为：
+
+```java
+true
+————————————————————————————————
+您的代码中缺少闭合符号
+false
+————————————————————————————————
+您的代码中有符号不对应
+false
+————————————————————————————————
+您的代码中有符号不对应
+false
+```
+
+可以看到我还判断了出错的大概原因，利用栈结构就很好的完成了编码检查这个工作，像这种思想还可以运用到我们的实际开发中，希望大家都能有所体会。
 
 # 线程
 
