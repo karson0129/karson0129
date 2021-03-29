@@ -628,6 +628,10 @@ Thread是java语言对线程的抽象，Runnable是对任务的抽象。
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20210318234950490.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2thcnNvbk5ldA==,size_16,color_FFFFFF,t_70)
 
+### **死锁**
+
+规范定义：死锁是指两个或两个以上的线程在执行过程中，由于竞争资源或者由于彼此通信而造成的一种阻塞的现象，若无外力作用，它们都将无法推进下去。此时称系统处于死锁状态或者系统产生了死锁。
+
 #### **yield()方法**
 
 让出CPU执行权（让出的时间不能设定），让出后，仍然还是会被选中。（不会让出锁，只是让出执行权）
@@ -658,11 +662,11 @@ Thread是java语言对线程的抽象，Runnable是对任务的抽象。
 
 #### **notify()方法**
 
-不会释放锁All
+不会释放锁，只会唤醒一个等待线程。
 
-#### **notifyAll()方法**
+#### **notifyAll()方法**  
 
-不会释放锁
+不会释放锁，会唤醒所有的等待线程。
 
 **!!! 为什么不建议用stop停止线程，因为他会导致线程所占用的资源不会正常的释放**
 
