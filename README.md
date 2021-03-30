@@ -726,9 +726,49 @@ CAS的原理：利用了现代处理器都支持的CAS的指令，循环这个�
 
 ### 线程池和Exector框架
 
+线程时稀缺又昂贵的资源。经常创建和销毁线程会造成严重的资源浪费
+
+#### 线程池的创建，各参数的含义
+
+```java
+//7个参数
+public ThreadPoolExecutor(
+    int corePoolSize,//线程池的核心线程数
+    int maximumPoolSize,//可使用的最大线程数
+    long keepAliveTime,//控制空闲线程的醋存活时间，如果超过时间会销毁空闲的线程
+    TimeUnit unit,//时间单位
+    BlockingQueue<Runnable> workQueue,//阻塞队列，如果要工作的线程超过了maximumPoolSize，就会放到阻塞队列里面来，尽量配置成有界的
+    ThreadFactory threadFactory,//线程工厂。可以创建线程时微调
+    RejectedExecutionHandler handler//拒绝策略
+) {
+    
+}
+
+```
+
+**流程：如果线程池是空的时间，工作线程进来会在corePool里面，当超过了corePoolSize以后，线程会放到workQueue阻塞队列里面去，当workQueue放满以后，线程会在maximumPool里创建，但是不能超过maximumPoolSize数量，一但超过，RejectedExecutionHandler拒绝策略就会起作用。**
+
+!!!JDK为我们提供了4种拒绝策略：
+
+1. DiscardOldestPolicy：直接丢弃最老的那一个
+2. AbortPolicy：直接抛出异常，默认策略
+3. CallerRunsPolicy：让调用者线程执行任务，谁调用谁执行
+4. DiscardPolicy：把最新提交的任务直接扔了
+
+#### 关闭线程池
+
+1. shutdown：尝试关闭线程池，所有当前没有执行的线程进行中断
+2. shutdowNow：不管有没有执行，都会尝试进行中断 
+
+#### 任务特性
+
+1. CPU密集型：从内存中取数进行机算，maximumPoolSize配置的时候不要超过CPU核心数 + 1。（cpu+1是为了解决cpu页缺失状态）
+2. IO密集型：读取磁盘，网络通讯，线程数：maximumPoolSize配置的时候机器得cpu核心数*2
+3. 混合型，综合上面
 
 
-### 阻塞队列
+
+### **阻塞队列**
 
 概念、生产者消费性模式，平衡性能问题
 
@@ -736,10 +776,10 @@ CAS的原理：利用了现代处理器都支持的CAS的指令，循环这个�
 
 - ArrayBlockingQueue：一个由数组结构组成的有界阻塞队列。
 - LinkedBlockingQueue：一个由链表结构组成的有界阻塞队列。
-- PriorityBlockingQueue：一个支持优先级排序的无界阻塞队列。
-- DelayQueue：一个使用优先级队列实现的无界阻塞队列。
-- SynchronousQueue：一个不存储元素的阻塞队列。
-- LinkedTransferQueue：一个由链表结构组成的无界阻塞队列。
+- PriorityBlockingQueue：一个支持优先级排序的无界阻塞队列。实现是一个堆 
+- DelayQueue：一个使用优先级队列实现的无界阻塞队列。支持元素的延迟获取
+- SynchronousQueue：一个不存储元素的阻塞队列。里面不存在任何元素，都在内存里，解决耦合问题
+- LinkedTransferQueue：一个由链表结构组成的无界阻塞队列。transfer（）方法，如果有消费者在等待拿东西，生产者直接给消费者，不再放进阻塞队列。
 - LinkedBlockingDeque：一个由链表结构组成的双向阻塞队列。
 
 ### 线程安全
