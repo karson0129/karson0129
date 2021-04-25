@@ -1,4 +1,4 @@
-# 笔记
+#  笔记
 
 # 数据结构
 
@@ -721,6 +721,27 @@ CAS的原理：利用了现代处理器都支持的CAS的指令，循环这个�
  
 
 ### 显示锁和AQS
+
+同步工具类的内部（继承AQS），要求使用 模板方法的设计模式
+
+```java
+/**
+* 类说明：抽象蛋糕
+*/
+public abstract class AbstractCake{
+    protected abstract void shape();//造型
+    protected abstract void apply();//涂抹
+    protected abstract void brake();//烤制
+    
+    public final void run(){
+        this.shape();
+        this.apply();
+        this.brake();
+    } 
+}
+```
+
+AQS的基本思想是CLH队列锁，**AQS自旋锁不会一直自旋，自旋到一定次数就会挂起阻塞等待唤醒**，每一个等拿锁的线程打包成一个节点，挂到一个链表上，每个线程不断检测前面一个线程是否释放锁，释放了就拿锁。state成员变量，靠改变这个成员变量来检测拿锁
 
 ### 并发容器
 
