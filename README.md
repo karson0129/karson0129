@@ -811,11 +811,13 @@ public ThreadPoolExecutor(
 
 （原子操作）锁的是对象，注意锁的对象不能变化。
 
-#### **用处和用法**
+使用monitorenter 和 monitorexit 指令实现的
 
-##### 同步块
+- monitorenter指令是在编译后插入到同步代码块的开始位置，而monitorexit是插入到方法结束处和异常处。
+- 每个monitorenter 必须有对应的monitorexit  与之配对
+- 任何对象都有一个monitor 与之关联
 
-##### 方法
+#### **用处和用法** 
 
 #### **对象锁**
 
@@ -828,6 +830,13 @@ public ThreadPoolExecutor(
 最轻量的同步机制，保证的是可见性（并不保证原子性），加了volatile之后，子线程就可以看到主线程的成员变量的修改。
 
 一写多读的情况下适合使用volatile。
+
+volatile只是强制读的时候在堆内存（主内存）读，并且强制更新回去。
+
+有volatile变量修饰的共享变量进行写操作的时候会使用CPU提供的Lock前缀指令。
+
+- 将当前处理器缓存行的数据写回到系统内存。
+- 这个写回内存的操作会使在其他CPU里缓存了该内存地址的数据无效。
 
 **!!!面试题要点 i++ 但是会返回新的内存地址，因为实现的时候其实是返回了一个new integer()**
 
@@ -869,10 +878,107 @@ remove里面会调用expungeStaleEntry()方法做清除。
 
 #### 策略
 
+### 线程面试题
 
+#### synchronized 的原理以及ReentrantLock的区别
+
+答：synchronized 主要是靠monitorenter 指令来实现， ReentrantLock拿锁的动作可以中断，可以实现可重入。synchronized 是非公平锁，ReentrantLock可以实现公平锁 和 非公平锁。
+
+#### synchronized 做了哪些优化
+
+答：为了提升性能，JDK以入了偏向锁，自旋锁（轻量级锁），重量级锁。
+
+#### volatile能否保证线程安全？在DCL(双重检测锁定)上的作用是什么？
+
+答:虚拟机加载机制，虚拟器会加锁，保证同一时间只有一个线程可以执行类加载机制。  
+
+#### sleep可以中断吗？
+
+答：可以的，所以才会实现sleep方法的时候要时候try
+
+#### ThreadLocal是什么？
+
+答：是线程的本地变量，特殊变量。TheadLocal为每个线程实现的本地的变量副本。 
 
 **!!!静态内部类跟外面的类没有任何关系，可以理解为一个独立的类**
 
+# 序列化
+
+序列化的概念：将数据结构或对象转换成二进制串的过程。
+
+反序列化：将序列化过程中所生成的二进制串转换成数据结构或者对象的过程。
+
+持久化：把数据结构或对象，存储起来。
+
+
+
+### 1.Serializable
+
+标识：tags
+
+*1.通过IO对硬盘操作，速度较慢
+
+*2.大小不受限制
+
+*3.大量使用反射，产生内存碎片
+
+objectOutput
+
+objectStreamClass：描述一个对象的结构
+
+### 2.Parcelable
+
+*1.直接在内存操作，效率高，性能好
+
+*2.一般不能超过1m，修改内核也只能4m
+
+### 3.json，xml，protobuf
+
+
+
+# C语言
+
+#include <stdio.h>
+
+- <>寻找系统得资源
+- ""  寻找我们自己写的资源
+- .h   .hpp （声明文件  头文件）
+- .c   .cpp  (实现文件)
+
+```c
+#include <stdio.h>
+//基本数据类型
+int main(){
+    
+    int i = 100;
+    double d = 200.21;
+    float f = 200;
+    long l = 100;
+    short s = 100;
+    char c = 'd';
+    //字符串
+    char * str = "Karson";
+    
+    //不是随便打印，需要占位
+    printf("i的值是：%d\n",i);
+    printf("d的值是：%lf\n",d); 
+    printf("f的值是：%f\n",f);
+    printf("l的值是：%d\n",l);
+    printf("s的值是：%d\n",s);
+    printf("c的值是：%c\n",c);
+    printf("str的值是：%s\n",str);
+    
+    return 0;
+}
+```
+
+基本数据类型占多少个字节，***不同系统不同！！***
+
+int == 4字节
+
+double == 8字节
+
+char == 1字节
 
 
 
@@ -880,4 +986,4 @@ remove里面会调用expungeStaleEntry()方法做清除。
 
 
 
-
+   
