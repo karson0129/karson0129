@@ -936,6 +936,63 @@ objectStreamClass：描述一个对象的结构
 
 
 
+# RxJava（响应式编程）
+
+链式调用
+
+### 核心思想
+
+```java
+
+//起点
+Observable.just(String)  //内部会分发  //todo 2
+// 订阅 起点 和 终点  订阅起来
+.map(new Function<String,Bitmap>()){
+  @override
+  public Bitmap apply(String s){
+     //todo 3  卡片式拦截
+      return null; 
+  }  
+})
+.subscribeOn(Schedulers.io())//给上面的代码分配异步线程
+.observeOn(AndroidSchedulers.mainThread())//给下面观察者分配主线程
+.subscribe(
+	//终点
+    new observer<String>(){
+        //订阅开启
+        @override
+        public void onSubscribe(Disposable d){
+            //todo 1
+        }
+        
+        //拿到事件
+        @override
+        public void onNext(String s){
+             //todo 4
+        }
+        
+        //错误事件
+        @override
+        public void onError(Throwable e){
+            
+        }
+        
+        //完成事件
+        @override
+        public void onComplete()){
+             //todo 5 
+        }
+    }
+)
+
+```
+
+
+
+### 操作符
+
+
+
 # C语言
 
 #include <stdio.h>
