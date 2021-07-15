@@ -991,6 +991,102 @@ Observable.just(String)  //内部会分发  //todo 2
 
 ### 操作符
 
+#### flatMap
+
+发送一条信息，向下发送多条
+
+#### doOnNext
+
+
+
+RxJavaPlugins.onAssembly（）全部操作符都有这个，全局
+
+```java
+public static <T> Observable<T> onAssembly(@NonNull Observable<T> source){
+    //默认情况下 f == null
+    Function<? super Observable,? extends Observable> f = onObservableAssembly;
+    if( f != null){
+        return apply(f,source);
+    }
+    return source;
+}
+```
+
+Observable创建过程时，ObservableCreate传的是我们自定义source
+
+
+
+# JAVA  文件I/O
+
+字节流：就是一个一个字节的读。
+
+字符流：就是一串一串的读。
+
+### RandomAccessFile 断点续传
+
+成员方法：
+
+seek（int index）；可以将指针移动到某个位置开始读写
+
+setLength（long len）；给写入文件预留空间；
+
+------
+
+
+
+# JVM内存管理深度
+
+**Java解释执行是栈（操作数栈），C是寄存器（硬件）运算**
+
+JVM只是一个翻译
+
+JRE提供了基础类库
+
+JDK提供了工具
+
+**解释执行：解释一行，翻译一行**
+
+```java
+
+Java Virtual Machine        java程序                   通常.java后缀
+                              \|/                      
+翻译                        java字节码              通常.class .jar 等
+                              \|/ 
+                              JVM
+                              \|/ 
+从跨平台到跨语言            操作系统函数                Linux，window，maxos
+```
+
+## 运行时数据区
+
+定义：Java虚拟机在执行Java程序的过程中会把它所管理的内存划分为若干个不同的数据区域。
+
+有 方法区 、 堆 、虚拟机栈、本地方法栈、程序计数器。**其中  虚拟机栈、本地方法栈、程序计数器 是线程私有的**， **线程共享的有 方法区 、堆** 
+
+### 程序计数器
+
+指向当前线程正在执行的字节码指令的地址，唯一不会OOM。
+
+### 虚拟机栈
+
+存储当前线程运行方法所需的数据、指令、返回地址。先进后出
+
+#### 栈帧
+
+1. 局部变量表
+
+2. 操作数栈
+
+3. 动态连接
+
+4. 完成出口
+
+   
+
+   
+
+------
+
 
 
 # C语言
