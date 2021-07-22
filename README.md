@@ -1214,6 +1214,16 @@ Java Virtual Machine        java程序                   通常.java后缀
 
 ------
 
+# Android虚拟机与类加载机制
+
+
+
+
+
+
+
+------
+
 # C语言
 
 #include <stdio.h>
