@@ -1230,6 +1230,267 @@ Dalvik虚拟机与Java虚拟机共享有差不多的特性，差别在于两者�
 
 基于寄存器的虚拟机中没有操作数栈，但是有跟多虚拟寄存器。其实和操作数栈相同，这些寄存器野存放在运行是栈中，本质上就是一个数组。与JVM相似，在Dalvik VM中每个线程都有自己PC和调用栈，方法调用的活动记录以帧为单位保存在调用栈上。
 
+### ART与Dalvik
+
+Dalvik虚拟机执行的是dex字节码，解释执行。从Android2.2版本开始，支持JIT即时编译（Just in Time）在程序运行的过程中进行选择热点代码（机场执行的代码）进行编译或者优化。
+
+而ART（Android Runtime）是在Android4.4中引入的一个开发者选项，也是Android5.0及更高版本的默认Android运行时。ART虚拟机执行的是本地机器码。Android的运行时从Dalvik虚拟机替换成ART虚拟机，并不要求开发者将自己的应用直接编译成目标机器码，Apk仍然是一个包含dex字节码的文件。
+
+### 双亲委托机制
+
+**责任链设计模式**
+
+PathClassLoader --》父类 --》BootClassLoader
+
+------
+
+# Kotlin
+
+```kotlin
+
+var hh = "123" //可以修改
+val ii = "123" //不可以修改
+
+//可变参数（可变长、参数函数）
+lenMethod（1，2，3，4，5）
+
+fun lenMethod（vararg value：Int）{
+    for（i in value）{
+        prinln（i）
+    }
+}
+
+//从 1到9
+for （i：int in 1..9）{
+    prinln(i)
+}
+
+//从大到小
+for （i :Int in 9 downTo 1）{
+    
+}
+
+//数组
+val numbers = arrayof（1，2，3）
+for (number in numbers){
+     
+}
+
+//标签
+ttt@ for （i in 1..20）{
+    for （j in 1..20）{
+        break@ttt //i循环给break
+    }
+}
+
+//lateinit 懒加载
+lateinit var name :String
+
+//数据类 == java实体类
+data class User(val id:int,val name:String,val sex: char) 
+
+//只实例一次  == 单例
+object my{
+    
+}
+
+//派生操作
+class NetManager{
+    
+    companion object{
+		//全部都是  相当于 java static
+        
+    }
+    
+}
+
+//内部类
+inner class Sub2{
+    
+}
+
+```
+
+------
+
+# 自定义View，高级UI
+
+自定义view 包含什么？布局   显示  时间分发
+
+布局：onLayout   onMeausre   / layout：ViewGroup
+
+显示：onDraw  ： canvas paint matrix clip rect animation path（别塞尔曲线）
+
+交互：onTouchEvennt  ：组合的viewgroup
+
+**ViewGroup 先度量孩子，再度量自己**
+
+### 自定义View
+
+在没有现成的View，需要自己 实现的时候，就使用自定义View，一般继承自View，SurfaceView或其他View。
+
+### 自定义ViewGroup
+
+自定义ViewGroup一般是利用现有的组件根据特定的布局方法来组成新的组件，大多继承自ViewGroup或各种Layout。
+
+### measureSpec
+
+高两位：用来表示mode  UNSPECIFIED 不对View大小左限制，系统使用；EXACTLY 确切得大小，如100dp；AT_MOST 大小不可超过某数值，如：matchParent，最大不能超过你爸爸。
+
+低30位：表示size
+
+------
+
+# 事件冲突原因与解决方案大解密
+
+```java
+事件分发流程                      Activity # dispatchTouchEvent()  
+                                            \|/
+                              PhoneWindow # SuperDispatchTouchEvent()
+                                            \|/
+                              DecorView # SuperDispatchTouchEvent()
+                                            \|/
+                              ViewGroup # dispatchTouchEvent()  
+                                            \|/
+处理事件                            View # dispatchTouchEvent()  
+                                            \|/
+                                   View # onTouchEvent()
+
+```
+
+
+
+
+
+### onTouch与onClick之间会产生事件冲突吗?
+
+会的！当onTouch 返回 true 的时候 onClick会被拦截了。
+
+
+
+### 事件在控件中是如何传递的？
+
+
+
+### 事件冲突产生的根本原因？
+
+
+
+### 如何解决事件冲突？
+
+外部拦截法  父View去处理
+
+内部拦截法  子view去处理
+
+### Down事件
+
+- 判断事件是否拦截
+- 分发或者处理（拦截：相当于你是最后一个）down事件才会分发
+
+### Move事件
+
+一般来说是直接交给Down事件处理对象。
+
+------
+
+# Handler底层原理系统分析
+
+### 线程间如果通讯
+
+Handler 通信实现的方案实际上是**内存共享的方案**。
+
+```java
+
+handler--》sendMessage(发出消息)--》messageQueue.enqueueMessage(把消息放到消息队列)--》Looper.loop(循环拿出消息池里的信息)--》messageQueue.next()--》handler.dispatchMessage()-->handler.handleMessage(拿到消息)
+
+    
+数据结构：有单链表实现的优先级队列   
+    排序算法？插入算法！
+    先进，先出
+    
+Looper源码核心？  构造函数 loop方法 threadLocal
+```
+
+## 消息机制之同步屏障
+
+
+
+## HandlerThread 存在的意义
+
+HandlerThread 是 Thread 的子类，就是一个线程，只是它在自己的线程里面帮我们创建了Looper。
+
+**HandlerThread存在的意义如下**
+
+- 方便使用，方便初始化，方便获取线程Looper
+- 保证了线程安全
+
+
+
+## 面试题
+
+### 一个线程有几个Handler？
+
+有N个，可以一直New
+
+### 一个线程有几个Looper？如何保证？
+
+一个，因为有stheardLocal，保存了一份Looper对象。
+
+### Handler导致内存泄漏是什么原因？为什么其他的内部类没有说过有这个问题？
+
+内部类持有外部类的对象！**其他类是生命周期的问题**  Handler持有activity对象，根据可达性分析回收不到。
+
+### 为何主线程可以new Handler？如果想要在子线程中new Handler要做些什么准备？
+
+```java
+new Thread(Runnable){
+    Looper.prepare();
+      //再发送消息
+    handler.sendMessage();
+    Looper.loop();
+}
+```
+
+### 子线程中维护Looper，消息队列无消息的时候的处理方案是什么？有什么用？
+
+
+
+### 疑问？
+
+#### Handler Loop 休眠为什么不会导致ANR？
+
+#### MessageQueue 队列处理机制，在Fragment 生命周期管理中的应用。
+
+
+
+------
+
+# 进程间通信机制 Binder原理讲解
+
+binder是什么？
+
+- 进程间的通信机制
+- 驱动设备
+- binder.java -->实现 Ibinder 接口 
+
+自己创建得进程：webview， 视频播放，音乐，推送
+
+优点：
+
+- 内存
+
+![binder与传统IPC对比](https://img-blog.csdnimg.cn/8a8787e897ea437298ade7bef04aabc5.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2thcnNvbk5ldA==,size_16,color_FFFFFF,t_70)
+
+## MMAP（binder_mmap）
+
+Linux通过将一个虚拟内存区域与一个磁盘上的对象关联起来，以初始化这个虚拟内存区域的内容，这个过程称为内存映射（menory mapping）。
+
+- 通过用户空间得虚拟内存大小---分配一块内核的虚拟内存
+- 分配了一块物理内存
+- 把这块物理内存分别映射到  用户空间的虚拟内存和内核的虚拟内存
+
+
+
 ------
 
 # C语言
@@ -1282,4 +1543,4 @@ char == 1字节
 
 
 
-   
+  
