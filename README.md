@@ -874,13 +874,21 @@ volatile只是强制读的时候在堆内存（主内存）读，并且强制更
 
 remove里面会调用expungeStaleEntry()方法做清除。
 
-**1.强引用**
+##### **1.强引用**
 
-**2.软引用**
+无论如果都不会被回收。
 
-**3.弱引用**
+##### **2.软引用**
 
-**4.虚引用**
+只有在内存不足的时候才会被回收。
+
+##### **3.弱引用**
+
+只要被GC扫描到了，就会被回收到。
+
+##### **4.虚引用**
+
+
 
 ### Thread local的线程不安全
 
@@ -1229,6 +1237,16 @@ Java Virtual Machine        java程序                   通常.java后缀
 - 引用更新
 - 用户线程暂停
 - 没有内存碎片
+
+### APP内存组成以及限制
+
+ANDROID 给每个 APP 分配一个 JVM，让 APP 运行在 DALVIK 上，这样即时 APP 崩溃也不会影响到系统。系统给 JVM 分配了一定的内存大小，APP 可以申请使用的内存大小不能超过此硬性逻辑限制，就算物理内存富余，如果应用超出 JVM 最大内存，就会出现内存溢出。
+
+由程序控制操作的内存空间在 heap 上，分 JAVA heapsize 和 native heapsize
+
+Java 申请的内存在 JVM heap 上，所以如果 java 申请的内存大小超过 JVM 的逻辑内存限制，就会出现内存溢出的异常。
+
+native 层内存申请不受其限制，native 层受 native process 对内存大小的限制。
 
 ------
 
@@ -2598,19 +2616,25 @@ Handler 通信实现的方案实际上是**内存共享的方案**。
 
 ```java
 
-handler--》sendMessage(发出消息)--》messageQueue.enqueueMessage(把消息放到消息队列)--》Looper.loop(循环拿出消息池里的信息)--》messageQueue.next()--》handler.dispatchMessage()-->handler.handleMessage(拿到消息)
+（子线程）handler--》sendMessage(发出消息)--》messageQueue.enqueueMessage(把消息放到消息队列)--》Looper.loop(循环拿出消息池里的信息)--》messageQueue.next()--》（主线程）handler.dispatchMessage()-->handler.handleMessage(拿到消息)
 
     
-数据结构：有单链表实现的优先级队列   
+数据结构：由单链表实现的优先级队列   
     排序算法？插入算法！
     先进，先出
-    
+    永远都是取第一个：所以是一个优先级队列。
 Looper源码核心？  构造函数 loop方法 threadLocal
+MessageQueue伴随着looper一起创建，只有一个
+    享元设计模式（内存复用）
 ```
+
+**为什么Handler 会有Activity对象，因为内部类持有外部类对象（JAVA思想）**
+
+
 
 ## 消息机制之同步屏障
 
-
+刷新UI
 
 ## HandlerThread 存在的意义
 
@@ -2624,6 +2648,12 @@ HandlerThread 是 Thread 的子类，就是一个线程，只是它在自己的�
 
 
 ## 面试题
+
+### 一个线程如果保证只有一个Loop？
+
+因为有 ThreadLocal（）的存在，ThreadLocalMap里保存了loop对象。
+
+线程 -》 ThreadLocalMap -》 <唯一的ThreadLocal，value>
 
 ### 一个线程有几个Handler？
 
@@ -2650,7 +2680,16 @@ new Thread(Runnable){
 
 ### 子线程中维护Looper，消息队列无消息的时候的处理方案是什么？有什么用？
 
+子线程没有消息一定要调用，mQueue.quit()；
 
+两个方面：
+
+- message 不到时间 （自动唤醒）
+- messageQueue为空，（无限等待），当sendMessage的时候会nativeWake（）方法唤醒。
+
+### 什么时候返回一个空msg？
+
+应用退出(mQueue.quit（)...
 
 ### 疑问？
 
@@ -2664,17 +2703,24 @@ new Thread(Runnable){
 
 # 进程间通信机制 Binder原理讲解
 
-binder是什么？
+### binder是什么？
 
 - 进程间的通信机制
 - 驱动设备
 - binder.java -->实现 Ibinder 接口 
+- 每个进程里面 都有自己的内存空间 和 内核内存空间
 
 自己创建得进程：webview， 视频播放，音乐，推送
+
+### linux的通信有
+
+管道，信号量，socket，共享内存
 
 优点：
 
 - 内存
+- 风险隔离
+- 性能小于共享内存，优与其他方法 IPC（进程间通信）
 
 ![binder与传统IPC对比](https://img-blog.csdnimg.cn/8a8787e897ea437298ade7bef04aabc5.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2thcnNvbk5ldA==,size_16,color_FFFFFF,t_70)
 
@@ -2685,6 +2731,51 @@ Linux通过将一个虚拟内存区域与一个磁盘上的对象关联起来，
 - 通过用户空间得虚拟内存大小---分配一块内核的虚拟内存
 - 分配了一块物理内存
 - 把这块物理内存分别映射到  用户空间的虚拟内存和内核的虚拟内存
+
+虚拟内存--地球仪
+
+物理内存--地球
+
+## Binder驱动设备 
+
+BInder 初始化主要做以下的事：
+
+#### binder_init
+
+- 分配内存
+- 初始化设备
+- 放入链表（ binder_devices  ）
+
+#### binder_open
+
+- 创建binder_proc对象
+- 当前进程的信息，proc
+- filp->private_data = proc
+- 添加到binder_procs链表中
+
+#### binder_mmap
+
+- 通过用户空间的虚拟内存大小--分配一块内核的虚拟内存
+- 分配了一块物理内存---4kb（一叶）
+- 把这块物理内存分别映射到---用户空间的虚拟内存 和 内核的虚拟内存
+
+struct vm_struct * area;---内核的虚拟内存
+
+vma ---- 进程的虚拟内存 ----4M驱动定的，1M-8k ---**intent 里面使用了binder 所以传输数据大小不能超过1M**
+
+虚拟内存  放入一个东西
+
+用户空间 == 虚拟内存地址 + 偏移量
+
+分配4kb的物理内存 --- 内核的虚拟空间（默认同步）
+
+#### binder_ioctl
+
+- 读写操作---BINDER_WRITE_READ---ioctl（BINDER_WRITE_READ ）
+
+
+
+**binder 的 jni 注册  目的：java 和 native 能够互相调用**--系统帮我们注册了
 
 
 
@@ -2722,6 +2813,34 @@ int main(){
     printf("c的值是：%c\n",c);
     printf("str的值是：%s\n",str);
     
+    //& 等于取出这个值的地址
+    //* 等于取出这个地址所对应的值    
+    
+    //指针永远存放内存地址
+    /*
+    * 内存地址  == 指针
+    * 指针 == 内存地址 
+    * int * int类型的指针
+    * 指针别名，指针变量 == 就是一个变量而已，只不过是指针变量
+    */
+    
+    int num = 99;
+    
+    int * num_p = &num;//取出num的内存地址给num_p  一级指针
+    
+    int ** num_p_p = &num_p;//取出num_p的内存地址给num_p_P  二级指针
+    
+    //定义数组
+    int arr[] = {1,2,3,4};
+    //数组的内存地址 == 第一个元素的内存地址 
+    //数组是连续的内存空间
+    //规范写法
+    int i = 0；
+        for(i = 0；i < 4; ++i ){
+            
+        }
+    
+    
     return 0;
 }
 ```
@@ -2734,10 +2853,314 @@ double == 8字节
 
 char == 1字节
 
+```c
+#include<stdio.h>
+
+void change(int i);//先声明
+
+//
+int main(){
+    
+    return 0;
+}
+
+//再实现
+void change(int i){
+    
+}
+
+```
+
+**指针占用的内存大小是？4个字节，不同操作系统不同，32位是4 ，64是8**
+
+**指针有什么用，既然都是4？数组每次挪动都是4！类型规定的好处**
+
+```c
+//函数指针
+
+void add(int num1,int num2){
+    
+}
+
+void opreate(void(*method)(int,int),int num1,int num2){
+    //函数的上面已经声明就是 函数的指针，所以可以省略*
+    method(num1,num2);
+}
+
+//把函数当成指针
+int main(){
+    opreate(10,10);
+    
+    return 0;
+}
+```
+
+函数指针升级用法 
+
+```c
+#include<stdio.h>
+
+//进栈
+void staticAction(){
+    int arr[5];//静态开辟 栈区
+    
+    int i = 0;
+    for (i = 0;i < 5; ++i ){
+        arr[i] = i;
+        printf("%d,%p \n",*(arr + 1),arr + 1);
+    }
+}
+
+//malloc 在堆区开辟的内存空间（动态的范畴）
+void dynamicAction(){
+    //void * 可以任意转变 int * double *
+    int * arr = malloc(1 * 1024 * 1024); 
+    
+    //必须释放
+    free(arr);
+    arr = NULL;
+}//此函数弹栈后，不会释放堆区成员。
+
+
+//动态开辟之 realloc
+//面试题 为什么传入arr指针，和总大小长度，因为有可能系统占用了资源，新开辟空间
+int main(){
+    int num;
+    printf("i请输入数的个数");
+    scanf("%d",&num);
+    
+    int * arr = (int *)malloc(sizeof(int) * num);
+    
+     int new_num;
+    scanf("%d",&new_num);
+    int * new_arr = (int *)realloc(arr,sizeof(int) * (num + new_num));
+      
+}
+
+
+void callBackMethod(char * fileName,int current,int total){
+    
+}
+
+//压缩的方法
+//定义函数指针：返回值（*名称）（int，double）
+void compress(char * fileName,void(*callBack)(char * ,int,int)){
+    callBack(fileName,5,10);//回调给外界 压缩的进度情况
+}
+
+//C语言  boolean  不是0就是true！！
+//栈区：占用内存大小  最大值：2M 平台有关系的
+
+int main(){
+    void(* call) (char*,int,int) = callBackMethod；//这个写法不规范
+        
+   	//先定义再赋值
+   	void (* call)(char *,int,int);
+    call = callBackMethod;
+    //使用
+    compress("karson",call);
+}
+
+
+//字符串
+void string(){
+    char str[] = {'k','a','r','s','o','n'};
+    str[2] = 'z';
+    printf("第一种方式%s\n",str);//printf 必须遇到 \0才结束。
+    
+    char * str2 = "karson";//隐式添加 karson\0
+    str2[2] = 'z';//这个会崩溃
+}
+
+int getlen(char * string){
+    int count = 0;
+    while(*string){// stirng != \0
+        count++;
+    }
+    return count;
+}
+
+/**
+*  字符串转换
+*/
+void changeStr(){
+    char * num = "1";
+    
+    int result = atoi(num);
+    if(result){
+        //转换成功 ,非0就是ture
+    }else{
+        //转换失败
+    }
+}
+
+
+void len(){
+    
+    char * pop = "karson";
+    char * text = "l am karson";
+    
+    //求取位置
+    int index = pop - text;
+    printf("%s第一次出现的位置是:%d\n",pop,index);
+}
+
+//转换成小写
+void lower(char * dest,char * name){
+    while(*name){
+        *dest = tolower(*name);
+        name++;//挪动指针
+        dest++;//挪动指针
+    }
+    *dest = '\0';//避免打印系统值
+}
+
+```
+
+### 结构体
+
+```c
+// 第一种写法
+struct Dog{
+    //成员
+    char name[10];//这个需要strcpy进去
+    int age;
+    char sex;
+};
+
+//第二种
+struct Person{
+    //成员
+    char * name;
+    int age;
+    char sex;
+} ppp = {"karson",33,'M'}, 
+ppp2,
+ppp3,
+ppp5;
+
+//第三种
+struct Study{
+  char * studyContent;//学习内容  
+};
+struct Student{
+     //成员
+    char * name;
+    int age;
+    char sex;
+    
+    Study study;//vs 的写法
+    struct Study study;//Clion 工具写法
+    
+    struct Wan{
+        char * wanContent;//玩的内容 
+    } wan;
+};
+
+int main(){
+    struct Dog dog;//这样写完，成员是没有任何初始化的，成员默认值为系统值
+    
+    //赋值操作
+    strcpy(dog.name,"旺财");
+    dog.age = 3;
+    dog.sex = 'g';
+    
+    // ppp.name = karson
+    ppp.name = "karson"
+    ppp.age = 3;
+    ppp.sex = 'g';
+    
+    //3
+    struct Student student ={"mm",88,'g',{"学习C"},{"王者荣耀"}};
+    
+    return 0;
+}
+```
+
+### 结构体指针
+
+```c
+struct Cat{
+    char name[10];
+    int age;
+}
+
+//结构体与 结构体别名
+typedef struct Cat;//给结构体取别名 为什么要做 typedef 因为要做兼容
+
+typedef Cat * cat;//给结构体指针取别名
+
+//匿名结构体的别名
+typedef struct {
+    char name[10];
+    int age;
+} AV ;//AV 是这个匿名结构体的别名
+
+int main(){
+    //定义了别名
+    // VS CLion 一样的写法了
+    Cat * cat2 = malloc(sizeof(Cat));//就可以这样写了
+    
+    //============================================
+    //栈区
+    //结构体
+    struct Cat cat = {"jumao",2};
+    
+    struct Cat * catp = &cat;
+    catp->age = 3;
+    strcpy(catp->name,"hahahaha");
+    
+    //堆区
+    struct Cat * cat2 = malloc(sizeof(struct Cat));
+    
+     //栈区
+    //结构体数组
+    struct cat cat[10] ={
+        {"cat1",1},
+        {"cat2",2}
+    }
+    
+    struct Cat cat9 = {"cat9",9};
+    cat[9] = cat9;
+    
+    
+    //堆区
+    struct Cat * cat = malloc(sizeof(struct Cat) * 10);
+   	//默认第一个 
+    strcpy(cat->name,"cat1");
+    cat->age = 1;
+    
+    //给第八个赋值
+    cat += 7;
+    strcpy(cat->name,"cat1");
+    cat ->age = 1;
+}
+```
+
+### 枚举
+
+```c
+enum CommentType{
+    TEXT = 10,
+    TEXT_IMAGRE,
+    IAMGE
+};
+
+int main(){
+    //CLion 写法
+    enum CommentType commentType = TEXT;
+    
+    //VS
+    CommentType commentType = TEXT;
+    
+    return 0;
+}
+```
 
 
 
 
 
 
-  
+
+   
