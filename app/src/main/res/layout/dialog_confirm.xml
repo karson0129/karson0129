@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/transparent">
+
+    <LinearLayout
+        android:layout_width="@dimen/dimension_300"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/dimension_10"
+        android:background="@color/colorWhite"
+        android:orientation="vertical"
+        android:padding="@dimen/dimension_10">
+
+        <TextView
+            android:id="@+id/dialog_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/dimension_10"
+            android:text="@string/Please_put_information"
+            tools:ignore="HardcodedText"
+            android:layout_gravity="center"/>
+
+        <LinearLayout
+            android:id="@+id/linear_bookName"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dimension_50"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bookName"
+                >
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/edit_bookName"
+                android:layout_width="@dimen/dimension_180"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                >
+
+            </EditText>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linear_author"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dimension_50"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="@dimen/dimension_10"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bookAuthor"
+                >
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/edit_bookAuthor"
+                android:layout_width="@dimen/dimension_180"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                >
+
+            </EditText>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/dialog_cancel"
+                android:layout_width="@dimen/dimension_100"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/dimension_10"
+                android:layout_weight="1"
+                android:text="取消"
+                />
+
+            <Button
+                android:id="@+id/dialog_sure"
+                android:layout_width="@dimen/dimension_100"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="确定"
+                android:layout_marginStart="@dimen/dimension_10"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

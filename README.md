@@ -2779,6 +2779,67 @@ vma ---- 进程的虚拟内存 ----4M驱动定的，1M-8k ---**intent 里面使�
 
 
 
+
+
+------
+
+# OOM与内存优化-应用程序进程创建
+
+
+
+### Java 的对象生命周期
+
+```java
+                                        Java Object life Cycle
+Created创建--》In use应用--》invisible不可见--》Unreachable--》不可达--》Collected收集--》Finalize终结--》Dealucateated--》对象空间重新分配
+                                            
+Android：
+Dalvik：
+Linear Alloc：匿名共享内存 
+zygote space：
+Alloc space：每个进程独占
+                                            
+ART：
+Non Moving Space:
+Zygote Space:                                            
+Image Space:预加载的类信息                                            
+Large OBJ Space：大对象 bitmap                                            
+```
+
+
+
+### oom_adj
+
+可以查看app后台分配数字，如果数字越大，回收的时候越容易被回收。 
+
+### 内存三大问题
+
+1. 内存抖动
+2. 内存泄漏
+3. 内存溢出
+
+#### 内存抖动
+
+内存波动图形呈锯齿状、GC导致卡顿。
+
+#### 内存泄漏
+
+在当前应用周期内不再使用的对象被GC Roots引用，导致不能回收，使实际可使用内存变少。
+
+#### 内存溢出
+
+即OOM，OOM时会导致程序异常。Android设备出长以后，java虚拟机对单个应用的最大内存分配就确定下来了，超出这个值就会OOM。
+
+## OOM问题
+
+1. JAVA堆内存溢出
+2. 没有足够的连续内存空间
+3. FD数量超出限制
+4. 线程数量超出限制
+5. 虚拟内存不足
+
+
+
 ------
 
 # C语言
@@ -3146,6 +3207,13 @@ enum CommentType{
     IAMGE
 };
 
+//创建的时候已经有别名
+enum CommentType{
+    TEXT = 10,
+    TEXT_IMAGRE,
+    IAMGE
+}AV;
+
 int main(){
     //CLion 写法
     enum CommentType commentType = TEXT;
@@ -3156,6 +3224,689 @@ int main(){
     return 0;
 }
 ```
+
+### 打开文件
+
+```c
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+
+int main(){
+    
+    //fopen 打开文件的意思（参数1 文件路径，参数2 模式（r）读（w）写 （rb）作为二进制的读，（wb）作为二进制的写） 返回值是结构体
+    
+    ///=================打开文件========================
+    //文件路径
+    char * fileName = "filePath";
+    
+    File * file = fopen(fileName,"r");
+    if(!file){
+        exit(0);//退出程序
+    }
+    ///=================读读读========================
+    char bufferp[10];
+    
+    while(fgets(buffer,10,file)){
+        printf("%s",buffer);
+    }
+    
+    //关闭文件
+    fclose(file);
+    
+    
+    return 0;
+}
+
+```
+
+### 写入文件
+
+```c
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+
+int main(){
+    
+    //fopen 打开文件的意思（参数1 文件路径，参数2 模式（r）读（w）写 （rb）作为二进制的读，（wb）作为二进制的写） 返回值是结构体
+    
+    char * fileNameStr = "D:....."；
+    //既然是使用了w，他会自动生成文件    
+   	FILE * file（fileNameStr,"w"）;     
+    
+    if(!file){
+        exit(0);
+    }
+    
+    fputs("karson Success run..",file);
+    
+    //关闭文件
+    fclose(file);
+   
+    
+    return 0;
+} 
+```
+
+### 复制文件
+
+```c
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+
+int main(){
+    
+     char * fileNameStrFrom = "D:....."；//来源
+    
+     char * fileNameStrTo = "C:....."；  //到哪里去
+    
+     //rb 读取二进制数据
+     FILE * file = fopen（fileNameStrFrom,"rb"）;         
+    
+     //rw 写入二进制数据
+     FILE * fileCopy = fopen（fileNameStrTo,"wb"）;      
+    
+     if(!file || ！fileCopy){
+        exit(0);
+     }
+    
+     ///=================读读读========================
+    char buffer[514]; //514 * 4个字节
+    int len；//每次读取的长度
+        
+    //fread:  参数1：容器buffer ， 参数2 ：每次偏移多少， 参数3 ：容器大小    
+    while((len = fread(buffer,sizeof(int),sizeof(buffer) / sizeof(int) ,file)) != 0){
+        fwrite(buffer,sizeof(int),len,fileCopy);
+    }
+    
+    //关闭文件
+    fclose(file);
+    fclose(fileCopy);
+    
+	return 0;
+}
+```
+
+### 获取文件大小
+
+```c
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+
+int main(){
+
+    char * fileNameStr = "D:....."；//来源
+    
+    File * file = fopen(fileName,"rb");
+    
+    if(!file){
+        exit(0);
+    }
+    SEEK_CUR()
+     // SEEK_SET（开头） SEEK_CUR(当前)
+    fseek(file,0,SEEK_END);//挪动文件指针
+    
+    long file_size = ftell(file);
+    
+    printf("文件字节的大小： %d",file_size);
+        
+    //关闭文件
+    fclose(file);
+    
+	return 0;
+}
+```
+
+### 文件加解密
+
+```c
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+//================加密=================================
+int main(){
+    
+     char * fileNameStr = "D:....."；//来源
+     char * fileNameStrEncode = "D:....."；//加密后的目标文件
+    
+    File * file = fopen(fileName,"rb");// r 必须提前准备好文件
+    File * fileEncode = fopen(fileNameStrEncode,"wb");// w 创建一个0kb文件
+         
+    if(!file || ！fileEncode){
+        exit(0);
+     }
+         
+    // 【加密  和 解密 的 思路】
+    //  加密 === 破坏文件
+    //  解密 === 还原文件
+         
+    int c;//接受读取的值
+    while((c = fgetc(file)) != EOF){
+        //加密操作
+        fputc(c ^ 5,fileEncode);//写入 到 fileEncode
+    }
+    
+    //关闭文件
+    fclose(file);
+    fclose(fileEncode);
+    
+    return 0;
+}
+
+//==============解密=======================================
+int main(){
+    
+    char * fileNameStrEncode = "D:....."；//来源
+     char * fileNameStr = "D:....."；//解密后的目标文件
+    
+    File * file = fopen(fileName,"rb");// r 必须提前准备好文件
+    File * fileEncode = fopen(fileNameStr,"wb");// w 创建一个0kb文件
+         
+    if(!file || ！fileEncode){
+        exit(0);
+     }
+         
+    // 【加密  和 解密 的 思路】
+    //  加密 === 破坏文件
+    //  解密 === 还原文件
+         
+    int c;//接受读取的值
+    while((c = fgetc(file)) != EOF){
+        //加密操作
+        fputc(c ^ 5,fileEncode);//写入 到 fileEncode
+    }
+    
+    //关闭文件
+    fclose(file);
+    fclose(fileEncode);
+    
+    
+    return 0;
+}
+```
+
+
+
+
+
+------
+
+
+
+# C++
+
+C++ 语言面向对象
+
+c语言面向过程
+
+```c++
+void numberChange2(int & number1,int & number2){
+    //如果采用了引用 那两个函数的内存地址是一样的
+    int temp = 0;
+    tmep = number1;
+    number1 = number2;
+    number2 = temp;
+}
+
+int main(){
+    
+    int number1 = 10;
+    int number2 = 20;
+    
+    numberChange2(number1,number2);
+    
+    return 0;
+}
+```
+
+### 常量引用
+
+```c++
+#include<iostream>
+
+//声明std 我们的main函数就可以直接使用 
+using namespace std;
+
+typedef struct{
+    char name[20];
+    int age;
+}Student;
+
+//常量引用：Student 不准你改
+//插入数据库
+void insertStudent(const Student & student){
+    //只能读 不能修改
+}
+
+int main(){
+    
+    Student student = {"karson","18"};
+    insertStudent(student);
+    
+    
+    //—> 调用一级指针的成员
+    return 0;
+}
+
+//默认行参赋值
+int add(bool isOk = 0){
+    
+}
+
+
+//系统源码大量使用
+void add(char * logText,int ,int ,int){
+    
+}
+```
+
+### 结构函数
+
+```c++
+#include<iostream>
+
+//声明std 我们的main函数就可以直接使用 
+using namespace std;
+
+class Student{
+    
+public:
+    //空参数构造函数
+    Student(){
+        count << "123" << endl;
+    }
+    
+    //系统源码
+    Student(char * name):name(name){
+          count << "一个参数构造函数" << endl;
+    }
+    
+    //如果想一个构造函数调用两个构造喊出
+    //先调用两个构造函数，再调用一个构造函数
+    Student(char * name):Student(name，18){
+          count << "一个参数构造函数" << endl;
+    }
+    
+    Student(char * name,int age){
+          count << "两个个参数构造函数" << endl;
+    }
+    
+    //析构函数 Student 对象的，临终遗言，Student对象被回收了，你做一些释放工作
+    //delete stu 的时候，我们的析构函数一定会执行
+    //free 不会执行 
+    ~Student(){
+        
+    }
+    
+    //拷贝构造函数，它默认有，我们看不到，一旦我们写拷贝构造函数，会覆盖它
+    //对象1 = 对象2 
+    //覆盖拷贝构造函数
+    Student(const Student & student){//常量引用： 只读的
+        cout << "拷贝构造函数" << endl;
+        //要自己来处理 可以自己来控制 
+        this-name = student.name;
+        this->age = student.age;
+    }
+
+private:
+    char * name;
+    int age;
+    
+public:
+    void setName(char * name){
+        this->name = name;
+    }
+    
+    char * getName(){
+        return this->name;
+    }
+};
+
+int main(){
+    
+    //栈区空间
+    Student stu;
+    stu.setName("123");
+    
+    //堆区 
+    Student * stu = new Student("karson",26);
+    delete stu;
+    
+    
+    
+    return 0;
+}
+```
+
+
+
+**！！！new / delete 是一套 会调用构造函数 与 析构函数【C++标准规范】**
+
+**！！！malloc / free 是一套 不会调用构造函数 与 析构函数【C语言范畴】**
+
+### 拷贝构造函数
+
+```c++
+#include<iostream>
+
+
+struct Person{
+    int age;
+    char * name;
+}
+
+int main{
+    Person person1 = {100,"sss"};
+    
+    // = 你看起来，没什么特殊，但是有隐式的代码
+    //寻求p1 地址的对应成员的值  -》 寻求p2地址的对应成员赋值给给他们
+    //这样会调用自己定义的构造函数
+    Person person2 = person1;
+    
+    cout << preson2.name << "," << person2.age << endl;
+    
+     Person person2
+     person2 = person1;//这样不会调用自己定义的拷贝构造函数，但是会调用默认的拷贝构造函数
+    
+    return 0;
+}
+
+
+```
+
+### 指针常量、常量指针、常量指针常量
+
+```c++
+int main(){
+    
+    int number = 9;
+    int number2 = 8;
+    
+    //常量指针
+    const int * numberP1 = &number;
+    *numberP1 = 100;//报错 不允许去修改【常量指针】存放地址所对应的值
+    numberP1 = &number2;//ok，允许重新指向【常量指针】存放的地址
+    
+    //指针常量
+    int * const numberP2 = &number;
+    *numberP2 = 100;//ok 允许去修改【常量指针】存放地址所对应的值
+    numberP2 = &number2;//报错，不允许重新指向【常量指针】存放的地址
+    
+    //常量指针常量
+    //指针常量
+    const int * const numberP3 = &number;
+    *numberP3 = 100;//报错 不允许去修改【常量指针】存放地址所对应的值
+    numberP3 = &number2;//报错，不允许重新指向【常量指针】存放的地址
+    
+    return 0;
+}
+```
+
+
+
+
+
+------
+
+
+
+# 面试题
+
+## 请介绍下String、Stringbuffer、Stringbuilder区别及其使用场景。
+
+1、执行速度
+
+从执行速度来看  StringBuilder >  StringBuffer  >  String
+
+2、一个特殊例子
+
+​        String str = “This is only a” + “ simple” + “ test”;
+ StringBuffer builder = new StringBuilder(“This is only a”).append(“ simple”).append(“ test”);
+
+你会很惊讶的发现，生成str对象的速度简直太快了，而这个时候StringBuffer居然速度上根本一点都不占优势。其实这是JVM的一个把戏，实际上：
+
+　　　　String str = “This is only a” + “ simple” + “test”;
+
+　　　　其实就是：
+
+　　　　String str = “This is only a simple test”;
+
+　　　　所以不需要太多的时间了。但大家这里要注意的是，如果你的字符串是来自另外的String对象的话，速度就没那么快了，例如：
+
+　　　　String str2 = “This is only a”;
+
+　　　　String str3 = “ simple”;
+
+　　　　String str4 = “ test”;
+
+　　　　String str1 = str2 +str3 + str4;
+
+　　　　这时候JVM会规规矩矩的按照原来的方式去做。
+
+3、StringBuilder与 StringBuffer
+
+　　　　StringBuilder：线程非安全的
+
+　　　　StringBuffer：线程安全的
+
+　　　　当我们在字符串缓冲去被多个线程使用是，JVM不能保证StringBuilder的操作是安全的，虽然他的速度最快，但是可以保证StringBuffer是可以正确操作的。当然大多数情况下就是我们是在单线程下进行的操作，所以大多数情况下是建议用StringBuilder而不用StringBuffer的，就是速度的原因。
+
+4、StringBuffer对象和String对象之间的互转
+
+​     StringBuffer和String属于不同的类型，也不能直接进行强制类型转换 
+​     StringBuffer对象和String对象之间的互转的代码如下：
+
+​    String s = “abc”;
+​    StringBuffer sb1 = new StringBuffer(“123”);
+​    StringBuffer sb2 = new StringBuffer(s);  //String转换为StringBuffer
+​    String s1 = sb1.toString();        //StringBuffer转换为String
+
+ 5、 对于三者使用的总结： 
+
+​    1.如果要操作少量的数据用 String
+
+　　2.单线程操作字符串缓冲区 下操作大量数据用StringBuilder
+
+　   3.多线程操作字符串缓冲区 下操作大量数据 用StringBuffer
+
+
+
+## 描述横竖屏切换时 Activity 的生命周期
+
+**1.AndroidManifest没有设置configChanges属性**
+竖屏启动：
+
+onCreate -->onStart-->onResume
+
+切换横屏：
+
+onPause -->onSaveInstanceState -->onStop -->onDestroy -->onCreate-->onStart -->
+
+onRestoreInstanceState-->onResume -->onPause -->onStop -->onDestroy       
+
+（Android 6.0 Android 7.0 Android 8.0）
+横屏启动：
+
+onCreate -->onStart-->onResume
+
+切换竖屏：
+
+onPause -->onSaveInstanceState -->onStop -->onDestroy -->onCreate-->onStart -->
+
+onRestoreInstanceState-->onResume -->onPause -->onStop -->onDestroy       
+
+（Android 6.0 Android 7.0 Android 8.0）
+
+总结：没有设置configChanges属性Android 6.0 7.0 8.0 系统手机 表现都是一样的，当前的界面调用onSaveInstanceState走一遍流程，然后重启调用onRestoreInstanceState再走一遍完整流程，最终destory。
+
+**2.AndroidManifest设置了configChanges   android:configChanges="orientation"**
+竖屏启动：
+
+onCreate -->onStart-->onResume
+
+切换横屏：
+
+onPause -->onSaveInstanceState -->onStop -->onDestroy -->onCreate-->onStart -->
+
+onRestoreInstanceState-->onResume -->onPause -->onStop -->onDestroy        
+
+（Android 6.0）
+
+onConfigurationChanged-->onPause -->onSaveInstanceState -->onStop -->onDestroy -->
+onCreate-->onStart -->onRestoreInstanceState-->onResume -->onPause -->onStop -->onDestroy        
+
+（Android 7.0）
+
+ onConfigurationChanged    
+
+（Android 8.0）
+
+
+横屏启动：
+
+onCreate -->onStart-->onResume
+
+切换竖屏：
+
+onPause -->onSaveInstanceState -->onStop -->onDestroy -->onCreate-->onStart -->
+
+onRestoreInstanceState--> onResume -->onPause -->onStop -->onDestroy        
+
+（Android 6.0 ）  
+
+onConfigurationChanged-->onPause -->onSaveInstanceState -->onStop -->onDestroy -->
+onCreate-->onStart -->onRestoreInstanceState-->onResume -->onPause -->onStop -->onDestroy        
+
+（Android 7.0）
+
+onConfigurationChanged    
+
+（Android 8.0）
+
+总结：设置了configChanges属性为orientation之后，Android6.0 同没有设置configChanges情况相同，完整的走完了两个生命周期，调用了onSaveInstanceState和onRestoreInstanceState方法；Android 7.0则会先回调onConfigurationChanged方法，剩下的流程跟Android 6.0 保持一致；Android 8.0 系统更是简单，
+只是回调了onConfigurationChanged方法，并没有走Activity的生命周期方法。
+
+**3.AndroidManifest设置了configChanges **  
+android:configChanges="orientation|keyboardHidden|screenSize" 
+竖(横)屏启动：onCreate -->onStart-->onResume
+切换横(竖)屏：onConfigurationChanged   （Android 6.0 Android 7.0 Android 8.0）*
+
+总结：设置android:configChanges="orientation|keyboardHidden|screenSize"  则都不会调用Activity的其他生命周期方法，只会调用onConfigurationChanged方法。
+
+
+**4.AndroidManifest设置了configChanges  ** 
+android:configChanges="orientation|screenSize" 
+竖(横)屏启动：onCreate -->onStart-->onResume
+切换横(竖)屏：onConfigurationChanged   （Android 6.0 Android 7.0 Android 8.0）
+
+总结：没有了keyboardHidden跟3是相同的，orientation代表横竖屏切换 screenSize代表屏幕大小发生了改变，
+设置了这两项就不会回调Activity的生命周期的方法，只会回调onConfigurationChanged 。
+
+**5.AndroidManifest设置了configChanges**   
+android:configChanges="orientation|keyboardHidden" 
+
+总结：跟只设置了orientation属性相同，Android6.0 Android7.0会回调生命周期的方法，Android8.0则只回调onConfigurationChanged。说明如果设置了orientation 和 screenSize 都不会走生命周期的方法，keyboardHidden不影响。
+
+1.不设置configChanges属性不会回调onConfigurationChanged，且切屏的时候会回调生命周期方法。
+2.只有设置了orientation 和 screenSize 才会保证都不会走生命周期，且切屏只回调onConfigurationChanged。
+3.设置orientation，没有设置screenSize，切屏会回调onConfigurationChanged，但是还会走生命周期方法。
+
+另：
+代码动态设置横竖屏状态（onConfigurationChanged当屏幕发生变化的时候回调）
+setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+获取屏幕状态（int ORIENTATION_PORTRAIT = 1;  竖屏    int ORIENTATION_LANDSCAPE = 2; 横屏）
+int screenNum = getResources().getConfiguration().orientation;
+
+configChanges属性
+1. orientation 屏幕在纵向和横向间旋转 
+2.keyboardHidden 键盘显示或隐藏 
+3.screenSize 屏幕大小改变了 
+4.fontScale 用户变更了首选的字体大小 
+5.locale 用户选择了不同的语言设定 
+6.keyboard 键盘类型变更，例如手机从12键盘切换到全键盘 
+7.touchscreen或navigation 键盘或导航方式变化，一般不会发生这样的事件
+常用的包括：orientation keyboardHidden screenSize，设置这三项界面不会走Activity的生命周期，只会回调onConfigurationChanged方法。
+
+screenOrientation属性
+1.unspecified 默认值，由系统判断状态自动切换 
+2.landscape 横屏 
+
+3. portrait 竖屏 
+4.user 用户当前设置的orientation值 
+4. behind 下一个要显示的Activity的orientation值 
+5. sensor 使用传感器 传感器的方向 
+6. nosensor 不使用传感器 基本等同于unspecified
+    仅landscape和portrait常用，代表界面默认是横屏或者竖屏，还可以再代码中更改。
+
+
+
+
+## Activity 的启动模式有哪些？请举例说明各模式的应用场景。
+
+#### **一、基本描述**
+
+1.standard：标准模式：如果在mainfest中不设置就默认standard；standard就是新建一个Activity就在栈中新建一个activity实例；
+ 2.singleTop：栈顶复用模式：与standard相比栈顶复用可以有效减少activity重复创建对资源的消耗，但是这要根据具体情况而定，不能一概而论；
+ 3.singleTask：栈内单例模式，栈内只有一个activity实例，栈内已存activity实例，在其他activity中start这个activity，Android直接把这个实例上面其他activity实例踢出栈GC掉；
+ 4.singleInstance :堆内单例：整个手机操作系统里面只有一个实例存在就是内存单例；
+
+**在singleTop、singleTask、singleInstance 中如果在应用内存在Activity实例，并且再次发生startActivity(Intent intent)回到Activity后,由于并不是重新创建Activity而是复用栈中的实例，因此Activity再获取焦点后并没调用onCreate、onStart，而是直接调用了onNewIntent(Intent intent)函数；**
+
+### **二、Activity四种启动模式常见使用场景：**
+
+二、Activity四种启动模式常见使用场景：
+ 这也是面试中最为长见的面试题；当然也是个人工作经验和借鉴网友博文，如有错误纰漏尽请诸位批评指正；
+
+| LauchMode      | Instance                                                     |
+| -------------- | ------------------------------------------------------------ |
+| standard       | 邮件、mainfest中没有配置就默认标准模式                       |
+| singleTop      | 登录页面、WXPayEntryActivity、WXEntryActivity 、推送通知栏   |
+| singleTask     | 程序模块逻辑入口:主页面（Fragment的containerActivity）、WebView页面、扫一扫页面、电商中：购物界面，确认订单界面，付款界面 |
+| singleInstance | 系统Launcher、锁屏键、来电显示等系统应用                     |
+
+
+
+## 请描述Handler机制
+
+大纲里面有
+
+## 请画出Android系统中Touch事件分发的流程图。
+
+大纲里面有
+
+
+
+## Android 系统中进程的区别？进程和进程间的通讯有几种方式，分别介绍下。
+
+
+
+## Android系统中如何保证线程操作的安全？
+
+
+
+## 请介绍下ANR、OOM、内存泄漏发生的原因及解决方案。
+
+
+
+## 请使用一种排序算法将一个1-10组成的大小为10的无序数组中的元素从小到打进行排序。
+
+
+
+
+
+
+
+
 
 
 
